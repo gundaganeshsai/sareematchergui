@@ -2,6 +2,14 @@
   "expo": {
     "name": "SareeMatcher",
     "slug": "SareeMatcher",
+    "owner": "saiganeshgunda",
+    "extra": {
+      "API_BASE": "https://sareematcherbackend.onrender.com",
+      "router": {},
+      "eas": {
+        "projectId": "73c8d3e0-11a9-4a4c-a3ae-3c2cd64cc0ee"
+      }
+    },
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/images/icon.png",
