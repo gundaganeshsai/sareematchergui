@@ -178,150 +178,7 @@ type ColorPixel = {
   positions: Array<{ x: number; y: number }>;
   colorName: string
 };
-// Advanced color matching engine
-//  class ColorMatcher {
-//   //static backendUrl = "http://192.168.1.6:8000"; // ⚠️ replace with your backend IP
-//   static backendUrl = Constants.expoConfig?.extra?.API_BASE;
-//   // Call FastAPI backend instead of Vision API
-//   static async analyzeImageColors(imageUri: string): Promise<ColorPixel[]> {
-//     const formData = new FormData();
-//     formData.append("file", {
-//       uri: imageUri,
-//       type: "image/jpeg",
-//       name: "upload.jpg",
-//     } as any);
 
-//     const response = await fetch(`${this.backendUrl}/analyze`, {
-//       method: "POST",
-//       body: formData,
-//     });
-
-//     if (!response.ok) {
-//       throw new Error("Failed to analyze image colors");
-//     }
-
-//     const data = await response.json();
-//     return data.colors || []; // [{hex:"#aabbcc", positions:[{x,y}, ...]}]
-//   }
-
-//   static async findOptimalMatches(
-//     sareeColors: ColorPixel[],
-//     rackColors: ColorPixel[],
-//     positions: Array<{ x: number; y: number }>,
-//     sensitivity: "low" | "medium" | "high" = "medium",
-//     rackImageDimensions: { width: number; height: number },
-//     previewWidth: number,
-//     previewHeight: number
-//   ): Promise<Match[]> {
-//     const thresholds = { low: 80, medium: 60, high: 40 };
-//     const threshold = thresholds[sensitivity];
-//     const matches: Match[] = [];
-//     let matchId = 1;
-
-//     for (const sareeColorObj of sareeColors) {
-//       const sareeRgb = ColorTheory.hexToRgb(sareeColorObj.hex);
-//       if (!sareeRgb) continue;
-
-//       for (const rackColorObj of rackColors) {
-//         const rackRgb = ColorTheory.hexToRgb(rackColorObj.hex);
-//         if (!rackRgb) continue;
-
-//         let confidence = 0;
-//         const reasons: string[] = [];
-
-//         // --- Direct color similarity
-//         const delta = Math.sqrt(
-//           Math.pow(sareeRgb.r - rackRgb.r, 2) +
-//             Math.pow(sareeRgb.g - rackRgb.g, 2) +
-//             Math.pow(sareeRgb.b - rackRgb.b, 2)
-//         );
-//         if (delta < threshold) {
-//           confidence = Math.max(confidence, 100 - (delta / threshold) * 100);
-//           reasons.push("Direct color similarity");
-//         }
-
-//         // --- Complementary colors
-//         const complementary = ColorTheory.getComplementaryColor(sareeColorObj.hex);
-//         const compRgb = ColorTheory.hexToRgb(complementary);
-//         if (compRgb) {
-//           const compDelta = Math.sqrt(
-//             Math.pow(compRgb.r - rackRgb.r, 2) +
-//               Math.pow(compRgb.g - rackRgb.g, 2) +
-//               Math.pow(compRgb.b - rackRgb.b, 2)
-//           );
-//           if (compDelta < threshold) {
-//             confidence = Math.max(confidence, 95 - (compDelta / threshold) * 15);
-//             reasons.push("Complementary color match");
-//           }
-//         }
-
-//         // --- Analogous colors
-//         const analogous = ColorTheory.getAnalogousColors(sareeColorObj.hex);
-//         for (const anaColor of analogous) {
-//           const anaRgb = ColorTheory.hexToRgb(anaColor);
-//           if (anaRgb) {
-//             const anaDelta = Math.sqrt(
-//               Math.pow(anaRgb.r - rackRgb.r, 2) +
-//                 Math.pow(anaRgb.g - rackRgb.g, 2) +
-//                 Math.pow(anaRgb.b - rackRgb.b, 2)
-//             );
-//             if (anaDelta < threshold) {
-//               confidence = Math.max(confidence, 85 - (anaDelta / threshold) * 15);
-//               reasons.push("Analogous color match");
-//             }
-//           }
-//         }
-
-//         // --- Neutral combinations
-//         const sareeHsl = ColorTheory.rgbToHsl(
-//           sareeRgb.r,
-//           sareeRgb.g,
-//           sareeRgb.b
-//         );
-//         const rackHsl = ColorTheory.rgbToHsl(
-//           rackRgb.r,
-//           rackRgb.g,
-//           rackRgb.b
-//         );
-//         if (rackHsl.s < 20 || sareeHsl.s < 20) {
-//           confidence = Math.max(confidence, 80);
-//           reasons.push("Neutral tone combination");
-//         }
-
-//         // --- Add match if good enough
-//         if (confidence > 70) {
-//           // choose real rack pixel instead of random
-//           const rawPos =
-//  rackColorObj.positions ? rackColorObj.positions[
-//     Math.floor(Math.random() * rackColorObj.positions.length)
-//   ]: positions[Math.floor(Math.random() * positions.length)]; ;
-
-            
- 
-//           matches.push({
-//             id: matchId++,
-//             x: rawPos.x || 0,
-//             y: rawPos.y || 0,
-//             confidence: Math.round(confidence),
-//             colorName: `Rack Color ${rackColorObj.colorName}`,
-//             hexColor: rackColorObj.hex,
-//             dominantColor: sareeColorObj.hex,
-//             complementaryColors: [complementary, ...analogous.slice(0, 2)],
-//             category: "rack",
-//             harmony: ColorTheory.calculateColorHarmony([
-//               sareeColorObj.hex,
-//               rackColorObj.hex,
-//             ]),
-//             reasoning: reasons.join(", "),
-//           });
-//         }
-//       }
-//     }
-
-//     return matches.sort((a, b) => b.confidence - a.confidence).slice(0, 8);
-//   }
-  
-// }
 // Advanced color matching engine with exact position tracking
 class ColorMatcher {
   static backendUrl = Constants.expoConfig?.extra?.API_BASE;
@@ -345,116 +202,106 @@ class ColorMatcher {
     }
 
     const data = await response.json();
+    // console.log(JSON.stringify(data, null, 2));
+    // console.log('Received colors from backend:', data.colors);
+  
     return data.colors || []; // [{hex:"#aabbcc", positions:[{x,y}, ...]}]
   }
 
-  static async findOptimalMatches(
-    sareeColors: ColorPixel[],
-    rackColors: ColorPixel[],
-    positions: Array<{ x: number; y: number }>,
-    sensitivity: "low" | "medium" | "high" = "medium",
-    rackImageDimensions: { width: number; height: number },
-    previewWidth: number,
-    previewHeight: number
-  ): Promise<Match[]> {
-    const thresholds = { low: 80, medium: 60, high: 40 };
-    const threshold = thresholds[sensitivity];
-    const matches: Match[] = [];
-    let matchId = 1;
+  // Find best matches with detailed position tracking
+static async findOptimalMatches(
+  sareeColors: ColorPixel[],
+  rackColors: ColorPixel[],
+  positions: Array<{ x: number; y: number }>,
+  sensitivity: "low" | "medium" | "high" = "medium",
+  rackImageDimensions: { width: number; height: number },
+  previewWidth: number,
+  previewHeight: number,
+  maxPositionsPerColor = 5 // Limit positions to avoid too many markers
+): Promise<Match[]> {
+  const thresholds = { low: 80, medium: 60, high: 40 };
+  const threshold = thresholds[sensitivity];
+  const matches: Match[] = [];
+  let matchId = 1;
 
-    // Calculate scaling factors for position mapping
-    const scaleX = previewWidth / rackImageDimensions.width;
-    const scaleY = previewHeight / rackImageDimensions.height;
+  const scaleX = previewWidth / rackImageDimensions.width;
+  const scaleY = previewHeight / rackImageDimensions.height;
 
-    for (const sareeColorObj of sareeColors) {
-      const sareeRgb = ColorTheory.hexToRgb(sareeColorObj.hex);
-      if (!sareeRgb) continue;
+  for (const sareeColorObj of sareeColors) {
+    const sareeRgb = ColorTheory.hexToRgb(sareeColorObj.hex);
+    if (!sareeRgb) continue;
 
-      for (const rackColorObj of rackColors) {
-        const rackRgb = ColorTheory.hexToRgb(rackColorObj.hex);
-        if (!rackRgb) continue;
+    for (const rackColorObj of rackColors) {
+      const rackRgb = ColorTheory.hexToRgb(rackColorObj.hex);
+      if (!rackRgb) continue;
 
-        let confidence = 0;
-        const reasons: string[] = [];
+      let confidence = 0;
+      const reasons: string[] = [];
 
-        // --- Direct color similarity
-        const delta = Math.sqrt(
-          Math.pow(sareeRgb.r - rackRgb.r, 2) +
-            Math.pow(sareeRgb.g - rackRgb.g, 2) +
-            Math.pow(sareeRgb.b - rackRgb.b, 2)
+      // Direct color similarity
+      const delta = Math.sqrt(
+        Math.pow(sareeRgb.r - rackRgb.r, 2) +
+        Math.pow(sareeRgb.g - rackRgb.g, 2) +
+        Math.pow(sareeRgb.b - rackRgb.b, 2)
+      );
+      if (delta < threshold) {
+        confidence = Math.max(confidence, 100 - (delta / threshold) * 100);
+        reasons.push("Direct color similarity");
+      }
+
+      // Complementary colors
+      const complementary = ColorTheory.getComplementaryColor(sareeColorObj.hex);
+      const compRgb = ColorTheory.hexToRgb(complementary);
+      if (compRgb) {
+        const compDelta = Math.sqrt(
+          Math.pow(compRgb.r - rackRgb.r, 2) +
+          Math.pow(compRgb.g - rackRgb.g, 2) +
+          Math.pow(compRgb.b - rackRgb.b, 2)
         );
-        if (delta < threshold) {
-          confidence = Math.max(confidence, 100 - (delta / threshold) * 100);
-          reasons.push("Direct color similarity");
+        if (compDelta < threshold) {
+          confidence = Math.max(confidence, 95 - (compDelta / threshold) * 15);
+          reasons.push("Complementary color match");
         }
+      }
 
-        // --- Complementary colors
-        const complementary = ColorTheory.getComplementaryColor(sareeColorObj.hex);
-        const compRgb = ColorTheory.hexToRgb(complementary);
-        if (compRgb) {
-          const compDelta = Math.sqrt(
-            Math.pow(compRgb.r - rackRgb.r, 2) +
-              Math.pow(compRgb.g - rackRgb.g, 2) +
-              Math.pow(compRgb.b - rackRgb.b, 2)
+      // Analogous colors
+      const analogous = ColorTheory.getAnalogousColors(sareeColorObj.hex);
+      for (const anaColor of analogous) {
+        const anaRgb = ColorTheory.hexToRgb(anaColor);
+        if (anaRgb) {
+          const anaDelta = Math.sqrt(
+            Math.pow(anaRgb.r - rackRgb.r, 2) +
+            Math.pow(anaRgb.g - rackRgb.g, 2) +
+            Math.pow(anaRgb.b - rackRgb.b, 2)
           );
-          if (compDelta < threshold) {
-            confidence = Math.max(confidence, 95 - (compDelta / threshold) * 15);
-            reasons.push("Complementary color match");
+          if (anaDelta < threshold) {
+            confidence = Math.max(confidence, 85 - (anaDelta / threshold) * 15);
+            reasons.push("Analogous color match");
           }
         }
+      }
 
-        // --- Analogous colors
-        const analogous = ColorTheory.getAnalogousColors(sareeColorObj.hex);
-        for (const anaColor of analogous) {
-          const anaRgb = ColorTheory.hexToRgb(anaColor);
-          if (anaRgb) {
-            const anaDelta = Math.sqrt(
-              Math.pow(anaRgb.r - rackRgb.r, 2) +
-                Math.pow(anaRgb.g - rackRgb.g, 2) +
-                Math.pow(anaRgb.b - rackRgb.b, 2)
-            );
-            if (anaDelta < threshold) {
-              confidence = Math.max(confidence, 85 - (anaDelta / threshold) * 15);
-              reasons.push("Analogous color match");
-            }
-          }
-        }
+      // Neutral combination
+      const sareeHsl = ColorTheory.rgbToHsl(sareeRgb.r, sareeRgb.g, sareeRgb.b);
+      const rackHsl = ColorTheory.rgbToHsl(rackRgb.r, rackRgb.g, rackRgb.b);
+      if (rackHsl.s < 20 || sareeHsl.s < 20) {
+        confidence = Math.max(confidence, 80);
+        reasons.push("Neutral tone combination");
+      }
 
-        // --- Neutral combinations
-        const sareeHsl = ColorTheory.rgbToHsl(
-          sareeRgb.r,
-          sareeRgb.g,
-          sareeRgb.b
-        );
-        const rackHsl = ColorTheory.rgbToHsl(
-          rackRgb.r,
-          rackRgb.g,
-          rackRgb.b
-        );
-        if (rackHsl.s < 20 || sareeHsl.s < 20) {
-          confidence = Math.max(confidence, 80);
-          reasons.push("Neutral tone combination");
-        }
+      // Add match if confidence is high enough
+      if (confidence > 70) {
+        const detectedPositions = rackColorObj.positions && rackColorObj.positions.length > 0
+          ? rackColorObj.positions
+          : positions; // fallback if positions from CV not available
 
-        // --- Add match if good enough
-        if (confidence > 70) {
-          // Get exact position from rack color detection
-          let rawPos;
-          
-          if (rackColorObj.positions && rackColorObj.positions.length > 0) {
-            // Use actual detected position from CV2 analysis
-            // Select the first position or a random one from detected positions
-            rawPos = rackColorObj.positions[0]; // Or use random: Math.floor(Math.random() * rackColorObj.positions.length)
-          } else {
-            // Fallback to provided positions if no specific positions available
-            rawPos = positions[Math.floor(Math.random() * positions.length)];
-          }
+        // Limit the number of positions to display
+        const positionsToUse = detectedPositions.slice(0, maxPositionsPerColor);
 
-          // Scale position to match preview dimensions
+        for (const rawPos of positionsToUse) {
           const scaledX = rawPos.x * scaleX;
           const scaledY = rawPos.y * scaleY;
 
-          // Ensure position is within bounds
           const boundedX = Math.max(25, Math.min(scaledX, previewWidth - 25));
           const boundedY = Math.max(25, Math.min(scaledY, previewHeight - 25));
 
@@ -462,7 +309,7 @@ class ColorMatcher {
             id: matchId++,
             x: boundedX,
             y: boundedY,
-            originalX: rawPos.x, // Keep original position for reference
+            originalX: rawPos.x,
             originalY: rawPos.y,
             confidence: Math.round(confidence),
             colorName: rackColorObj.colorName || `Rack Color ${matchId}`,
@@ -470,10 +317,7 @@ class ColorMatcher {
             dominantColor: sareeColorObj.hex,
             complementaryColors: [complementary, ...analogous.slice(0, 2)],
             category: "rack",
-            harmony: ColorTheory.calculateColorHarmony([
-              sareeColorObj.hex,
-              rackColorObj.hex,
-            ]),
+            harmony: ColorTheory.calculateColorHarmony([sareeColorObj.hex, rackColorObj.hex]),
             reasoning: reasons.join(", "),
             detectedAt: {
               original: rawPos,
@@ -484,12 +328,13 @@ class ColorMatcher {
         }
       }
     }
-
-    // Remove duplicate positions (if multiple colors detected at same location)
-    const uniqueMatches = this.removeDuplicatePositions(matches);
-
-    return uniqueMatches.sort((a, b) => b.confidence - a.confidence).slice(0, 8);
   }
+
+  // Remove duplicate positions if needed
+  const uniqueMatches = this.removeDuplicatePositions(matches);
+
+  return uniqueMatches.sort((a, b) => b.confidence - a.confidence).slice(0, 8);
+}
 
   // Helper method to remove matches at very similar positions
   static removeDuplicatePositions(matches: Match[], threshold: number = 30): Match[] {
@@ -725,7 +570,7 @@ const handleSelectHarmony = (harmony: 'monochromatic' | 'complementary' | 'analo
 
   // FIXED: Real-time analysis effect with proper dependency management
   React.useEffect(() => {
-    if (realTimeMode && sareeImage && rackImage && !isAnalyzing && !hasAnalyzed) {
+    if (realTimeMode && sareeImage && rackImage && rackImageDimensions.width && rackImageDimensions.height &&!isAnalyzing && !hasAnalyzed) {
       console.log('Setting up real-time analysis timeout...');
       
       // Clear any existing timeout
@@ -746,7 +591,7 @@ const handleSelectHarmony = (harmony: 'monochromatic' | 'complementary' | 'analo
         clearTimeout(analysisTimeout.current);
       }
     };
-  }, [sareeImage, rackImage, realTimeMode, hasAnalyzed]); // FIXED: Removed performRealTimeAnalysis from dependencies
+  }, [sareeImage, rackImage, realTimeMode, hasAnalyzed,  rackImageDimensions]); // FIXED: Removed performRealTimeAnalysis from dependencies
 
   // FIXED: Reset hasAnalyzed when images change
   React.useEffect(() => {
@@ -1079,11 +924,13 @@ const handleSelectHarmony = (harmony: 'monochromatic' | 'complementary' | 'analo
             <View style={styles.markersOverlay}>
               {matches.map((match, index) => {
                 const isSelected = selectedMatch === match.id;
-                    // Use bounded coordinates for safe UI placement
+                const markerSize = 50;
+                const markerX = (match.x || 0) - markerSize / 2;
+                const markerY = (match.y || 0) - markerSize / 2;
+                                    // Use bounded coordinates for safe UI placement
                 // const markerX = (match.detectedAt?.bounded?.x || 0) - 25;
                 // const markerY = (match.detectedAt?.bounded?.y || 0) - 25;
-                const markerX = (match.x || 0) - 25;
-                const markerY = (match.y || 0) - 25;
+           
                 return (
                   <View key={match.id}>
                     
@@ -1914,4 +1761,8 @@ useCaseText: {
   textAlign: "center",
 }
 });
+
+function log(arg0: string, data: any, colors: any) {
+  throw new Error("Function not implemented.");
+}
 
