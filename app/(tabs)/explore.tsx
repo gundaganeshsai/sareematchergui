@@ -1,7 +1,10 @@
 import Constants from 'expo-constants';
-import { manipulateAsync, SaveFormat } from 'expo-image-manipulator';
+import * as ImageManipulator from 'expo-image-manipulator';
+import { SaveFormat } from 'expo-image-manipulator';
+
 import * as ImagePicker from 'expo-image-picker';
-import React, { useRef, useState } from 'react';
+import * as React from 'react';
+import { useRef, useState } from 'react';
 import {
   ActivityIndicator,
   Alert,
@@ -15,6 +18,7 @@ import {
   View
 } from 'react-native';
 import HarmonyModalJewlery from "../utils/HarmonyModalJewlery";
+import { usePermissions } from './_layout';
 
 interface JewelryItem {
   id: string;
@@ -42,6 +46,8 @@ interface ColorMatch {
 
 export default function Explore() {
   const [selectedImage, setSelectedImage] = useState<string | null>(null);
+  const { hasLibraryPermission, hasCameraPermission } = usePermissions();
+
   const [isAnalyzing, setIsAnalyzing] = useState(false);
   const [realTimeMode, setRealTimeMode] = useState(true);
   const [jewelryMatches, setJewelryMatches] = useState<JewelryItem[]>([]);
@@ -92,12 +98,12 @@ const handleSelectHarmony = (option: {
     try {
       const result = await ImagePicker.launchCameraAsync({
         mediaTypes: ImagePicker.MediaTypeOptions.Images,
-        allowsEditing: true,
+        allowsEditing: false,
         aspect: [4, 3],
         quality: 0.8,
       });
       if (!result.canceled && result.assets[0]) {
-        const resized = await manipulateAsync(
+        const resized = await ImageManipulator.manipulateAsync(
           result.assets[0].uri,
           [{ resize: { width: 800 } }],
           { compress: 0.8, format: SaveFormat.JPEG }
@@ -114,7 +120,7 @@ const handleSelectHarmony = (option: {
     try {
       const result = await ImagePicker.launchImageLibraryAsync({
         mediaTypes: ImagePicker.MediaTypeOptions.Images,
-        allowsEditing: true,
+        allowsEditing: false,
         aspect: [4, 3],
         quality: 0.8,
       });
@@ -126,36 +132,7 @@ const handleSelectHarmony = (option: {
     }
   };
 
-  // Request permissions on app start
-  React.useEffect(() => {
-    requestPermissions();
-  }, []);
-
-  const requestPermissions = async () => {
-    try {
-      log('Requesting permissions');
-      
-      if (Platform.OS !== 'web') {
-        const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
-        if (status !== 'granted') {
-          log('Media library permission denied');
-          Alert.alert('Permission needed', 'Photo library permission is required');
-        } else {
-          log('Media library permission granted');
-        }
-        
-        const cameraStatus = await ImagePicker.requestCameraPermissionsAsync();
-        if (cameraStatus.status !== 'granted') {
-          log('Camera permission denied');
-          Alert.alert('Permission needed', 'Camera permission is required');
-        } else {
-          log('Camera permission granted');
-        }
-      }
-    } catch (error) {
-      log('Error requesting permissions', error);
-    }
-  };
+  
 
   // Real-time analysis effect with proper dependency management
   React.useEffect(() => {
@@ -362,14 +339,27 @@ return (
           <View style={styles.buttonRow}>
             {Platform.OS !== "web" && (
               <TouchableOpacity
-                style={styles.primaryButton}
+                style={[
+                  styles.primaryButton,
+                  !hasCameraPermission && styles.disabledButton // gray if disabled
+                ]}
                 onPress={takePhoto}
+                disabled={!hasCameraPermission}
               >
                 <Text style={styles.buttonText}>📷 Take Photo</Text>
               </TouchableOpacity>
             )}
-            <TouchableOpacity style={styles.secondaryButton} onPress={pickImage}>
-              <Text style={styles.buttonText}>🖼️ Choose Image</Text>
+
+            <TouchableOpacity
+              style={[
+                styles.primaryButton,
+                Platform.OS === 'web' && styles.fullWidthButton,
+                !hasLibraryPermission && styles.disabledButton // gray if disabled
+              ]}
+              onPress={pickImage}
+              disabled={!hasLibraryPermission}
+            >
+              <Text style={styles.buttonText}>{Platform.OS === 'web' ? '📁 Select Image' : '🖼️ From Gallery'}</Text>
             </TouchableOpacity>
           </View>
         </View>
@@ -493,10 +483,16 @@ const styles = StyleSheet.create({
     alignItems: "center",
   },
   shopText: { color: "white", fontWeight: "bold" },
+    disabledButton: {
+    backgroundColor: '#9e9e9e',
+  },
 
   footer: { padding: 20, alignItems: "center" },
   footerText: { fontSize: 12, color: "#555", fontStyle: "italic" },
   footerSubtext: { fontSize: 11, color: "#888", marginTop: 3 },
+    fullWidthButton: {
+    minWidth: '80%',
+  },
 
   fab: {
     position: "absolute",

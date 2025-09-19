@@ -1,9 +1,7 @@
 import Constants from "expo-constants";
+import { manipulateAsync, SaveFormat } from "expo-image-manipulator";
 import * as ImagePicker from 'expo-image-picker';
 import React, { useRef, useState } from 'react';
-import HarmonyModal from "../utils/HarmonyModal";
-
-import { manipulateAsync, SaveFormat } from "expo-image-manipulator";
 import {
   Alert,
   Dimensions,
@@ -16,6 +14,8 @@ import {
   TouchableOpacity,
   View
 } from 'react-native';
+import HarmonyModal from "../utils/HarmonyModal";
+import { usePermissions } from "./_layout";
 const { width, height } = Dimensions.get('window');
 
 //   const uriToBase64 = async (uri: string): Promise<string> => {
@@ -537,6 +537,7 @@ class ColorMatcher {
 }
 
 export default function HomeScreen() {
+    const { hasLibraryPermission, hasCameraPermission } = usePermissions();
   const [sareeImage, setSareeImage] = useState<string | null>(null);
   const [rackImage, setRackImage] = useState<string | null>(null);
   const [matches, setMatches] = useState<Match[]>([]);
@@ -636,24 +637,7 @@ const nameByHex = React.useMemo(() => {
     return positions;
   };
 
-  // Request permissions on app start
-  React.useEffect(() => {
-    requestPermissions();
-  }, []);
-
-  const requestPermissions = async () => {
-    if (Platform.OS !== 'web') {
-      const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
-      if (status !== 'granted') {
-        Alert.alert('Permission needed', 'Photo library permission is required');
-      }
-      
-      const cameraStatus = await ImagePicker.requestCameraPermissionsAsync();
-      if (cameraStatus.status !== 'granted') {
-        Alert.alert('Permission needed', 'Camera permission is required');
-      }
-    }
-  };
+  
 // ✅ User picks harmony → analysis starts
 const handleSelectHarmony = (harmony: 'monochromatic' | 'complementary' | 'analogous' | 'triadic' | null) => {
   setSelectedHarmony(harmony);
@@ -1050,24 +1034,30 @@ const handleSelectHarmony = (harmony: 'monochromatic' | 'complementary' | 'analo
           </View>
         )}
         
-        <View style={styles.buttonRow}>
-          {Platform.OS !== 'web' && (
-            <TouchableOpacity
-              style={styles.button}
-              onPress={() => takePhoto('saree')}
-            >
-              <Text style={styles.buttonText}>📷 Take Photo</Text>
-            </TouchableOpacity>
-          )}
-          <TouchableOpacity
-            style={[styles.button, Platform.OS === 'web' && styles.fullWidthButton]}
-            onPress={() => pickImage('saree')}
-          >
+                  <View style={styles.buttonRow}>
+                  {Platform.OS !== 'web' && (
+                      <TouchableOpacity
+                        style={[
+                          styles.button,
+                          !hasCameraPermission && styles.disabledButton // gray if disabled
+                        ]}
+                        onPress={() => takePhoto('saree')}
+                        disabled={!hasCameraPermission}
+                      >
+                        <Text style={styles.buttonText}>📷 Take Photo</Text>
+                      </TouchableOpacity>
+                    )}
+        
+                    <TouchableOpacity
+                      style={[styles.button, Platform.OS === 'web' && styles.fullWidthButton, !hasLibraryPermission && styles.disabledButton ]}
+                      onPress={() => pickImage('saree')}
+                      disabled={!hasLibraryPermission}
+                    >
             <Text style={styles.buttonText}>
               {Platform.OS === 'web' ? '📁 Select Image' : '🖼️ From Gallery'}
             </Text>
-          </TouchableOpacity>
-        </View>
+                    </TouchableOpacity>
+                  </View>
       </View>
 
       {/* Blouse Rack Section */}
@@ -1153,14 +1143,19 @@ const handleSelectHarmony = (harmony: 'monochromatic' | 'complementary' | 'analo
         <View style={styles.buttonRow}>
           {Platform.OS !== 'web' && (
             <TouchableOpacity
-              style={styles.button}
+                                      style={[
+                          styles.button,
+                          !hasCameraPermission && { backgroundColor: "#ccc" } // gray if disabled
+                        ]}
+              disabled={!hasCameraPermission}
               onPress={() => takePhoto('rack')}
             >
               <Text style={styles.buttonText}>📷 Take Photo</Text>
             </TouchableOpacity>
           )}
           <TouchableOpacity
-            style={[styles.button, Platform.OS === 'web' && styles.fullWidthButton]}
+              style={[styles.button, Platform.OS === 'web' && styles.fullWidthButton, !hasLibraryPermission && styles.disabledButton ]}
+              disabled={!hasLibraryPermission}
             onPress={() => pickImage('rack')}
           >
             <Text style={styles.buttonText}>

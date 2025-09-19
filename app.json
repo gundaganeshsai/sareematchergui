@@ -3,6 +3,7 @@
     "name": "SareeMatcher",
     "slug": "SareeMatcher",
     "owner": "saiganeshgunda",
+    "platforms": ["android"],
     "extra": {
       "API_BASE": "https://sareematcherbackend.onrender.com",
       "router": {},
